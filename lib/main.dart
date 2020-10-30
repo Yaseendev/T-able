@@ -11,7 +11,8 @@ class SmartProductivityApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'T-able',
-      home:  AnalogClock(
+      home:  Scaffold(
+              body: AnalogClock(
 	decoration: BoxDecoration(
 	    border: Border.all(width: 2.0, color: Colors.black),
 	    color: Colors.transparent,
@@ -28,6 +29,7 @@ class SmartProductivityApp extends StatelessWidget {
 	showDigitalClock: false,
 	datetime: DateTime(2019, 1, 1, 9, 12, 15),
 	),
+      ),
       //initialRoute: HomeScreen.id,
       routes: {
         HomeScreen.id : (context) =>HomeScreen(),
