@@ -1,3 +1,4 @@
+import 'package:T_able/screens/nav_bar.dart';
 import 'package:flutter/material.dart';
 import './screens/Home_Screen.dart';
 //import 'package:analog_clock/analog_clock.dart';
@@ -11,7 +12,7 @@ class SmartProductivityApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'T-able',
-      home: HomeScreen(),
+      home: NavBarScreen(),
       //initialRoute: HomeScreen.id,
       routes: {
         HomeScreen.id : (context) =>HomeScreen(),

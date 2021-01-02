@@ -1,16 +1,26 @@
+import 'package:T_able/screens/add_event_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:analog_clock/analog_clock.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String id = 'home_screen';
+ 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _page = 0;
+  final List<Widget> _children = [
+    HomeScreen(),
+    AddEventScreen(),
+  ];
+  GlobalKey _bottomNavigationKey = GlobalKey();
+  
   @override
   Widget build(BuildContext context) {
+      
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -51,17 +61,27 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-       bottomNavigationBar: CurvedNavigationBar(
-    backgroundColor: Colors.blueAccent,
-    items: <Widget>[
-      Icon(Icons.list, size: 30),
-      Icon(Icons.add, size: 30),
-      Icon(Icons.compare_arrows, size: 30),
-    ],
-    onTap: (index) {
-      //Handle button tap
-    },
-  ),
+  //      bottomNavigationBar: CurvedNavigationBar(
+  //        key: _bottomNavigationKey,
+  //   //backgroundColor: Colors.lightGreenAccent,
+  //   items: <Widget>[
+  //     Icon(Icons.list, size: 30),
+  //     Icon(Icons.add, size: 30),
+  //     Icon(Icons.compare_arrows, size: 30),
+  //   ],
+  //   onTap: (index) {
+  //     //Handle button tap
+  //      setState(() {
+  //             _page = index;
+  //           });
+  //           final CurvedNavigationBarState navBarState =
+  //                       _bottomNavigationKey.currentState;
+  //                   navBarState.setPage(1);
+           
+  //     print('Page: $index');
+  //   },
+  //   //color: Colors.green,
+  // ),
     );
   }
 }
