@@ -1,27 +1,70 @@
 PODS:
+  - AFNetworking (4.0.1):
+    - AFNetworking/NSURLSession (= 4.0.1)
+    - AFNetworking/Reachability (= 4.0.1)
+    - AFNetworking/Security (= 4.0.1)
+    - AFNetworking/Serialization (= 4.0.1)
+    - AFNetworking/UIKit (= 4.0.1)
+  - AFNetworking/NSURLSession (4.0.1):
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+  - AFNetworking/Reachability (4.0.1)
+  - AFNetworking/Security (4.0.1)
+  - AFNetworking/Serialization (4.0.1)
+  - AFNetworking/UIKit (4.0.1):
+    - AFNetworking/NSURLSession
   - analog_clock (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - image_pickers (0.0.1):
+    - AFNetworking
+    - Flutter
+    - ZLPhotoBrowser-objc (= 1.0.2)
+  - path_provider (0.0.1):
+    - Flutter
+  - SDWebImage (5.10.2):
+    - SDWebImage/Core (= 5.10.2)
+  - SDWebImage/Core (5.10.2)
   - url_launcher (0.0.1):
     - Flutter
+  - ZLPhotoBrowser-objc (1.0.2):
+    - SDWebImage
 
 DEPENDENCIES:
   - analog_clock (from `.symlinks/plugins/analog_clock/ios`)
   - Flutter (from `Flutter`)
+  - image_pickers (from `.symlinks/plugins/image_pickers/ios`)
+  - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+
+SPEC REPOS:
+  trunk:
+    - AFNetworking
+    - SDWebImage
+    - ZLPhotoBrowser-objc
 
 EXTERNAL SOURCES:
   analog_clock:
     :path: ".symlinks/plugins/analog_clock/ios"
   Flutter:
     :path: Flutter
+  image_pickers:
+    :path: ".symlinks/plugins/image_pickers/ios"
+  path_provider:
+    :path: ".symlinks/plugins/path_provider/ios"
   url_launcher:
     :path: ".symlinks/plugins/url_launcher/ios"
 
 SPEC CHECKSUMS:
+  AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   analog_clock: 3f864a82c3b9ffc5743911e353d11556bdb43f7a
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  image_pickers: 4a20d713c9029a75582e28482271e92d72d334fd
+  path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  SDWebImage: b969dcfc02c40a5da71eac0b03b8f1a0c794a86f
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+  ZLPhotoBrowser-objc: c7684215bbde0ee990ad7bd1008e13bc3e6f6a32
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 

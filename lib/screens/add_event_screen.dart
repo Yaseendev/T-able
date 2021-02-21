@@ -20,22 +20,22 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
 
 String calendarId = "primary"; //"primary "If you want to work on primary calender of logged in user
-      googleCalendar.Event event = googleCalendar.Event(); // Create object of event
-
-      event.summary = title;
+      googleCalendar.Event gEvent = googleCalendar.Event(); // Create object of event
+      
+      gEvent.summary = title;
 
       googleCalendar.EventDateTime start =  googleCalendar.EventDateTime();
       start.dateTime = startTime;
       start.timeZone = "GMT+03:00";
-      event.start = start;
+      gEvent.start = start;
 
       googleCalendar.EventDateTime end = new googleCalendar.EventDateTime();
       end.timeZone = "GMT+03:00";
       end.dateTime = endTime;
-      event.end = end;
+      gEvent.end = end;
 
        try {
-        calendar.events.insert(event, calendarId).then((value) {
+        calendar.events.insert(gEvent, calendarId).then((value) {
           print("ADDED to calendar...${value.status}");
           if (value.status == "confirmed") {
             print('Your Event added successfully');
