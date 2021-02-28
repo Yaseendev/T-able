@@ -9,19 +9,21 @@ class HomeScreen extends StatefulWidget {
   static const String id = 'home_screen';
   //final _calendars;
   //final bloc;
+  //final sKey;
   HomeScreen();
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  GlobalKey _bottomNavigationKey = GlobalKey();
-
+  //GlobalKey _bottomNavigationKey = GlobalKey();
+final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: primaryColor1,
-      floatingActionButton: CustomActionButton(),
+      floatingActionButton: CustomActionButton(sKey:_scaffoldKey),
       body: Container(
         /*decoration: BoxDecoration(
           image: DecorationImage(

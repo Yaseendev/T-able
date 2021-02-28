@@ -4,6 +4,7 @@ import 'package:T_able/screens/Home_Screen.dart';
 import 'package:T_able/screens/add_event_screen.dart';
 import 'package:T_able/screens/calendars_screen.dart';
 import 'package:T_able/screens/chat_screen.dart';
+import 'package:T_able/screens/settings_screen.dart';
 import 'package:T_able/utils/bloc/calendarsList/calenderList_bloc.dart';
 import 'package:T_able/utils/vars_consts.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -11,6 +12,17 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+
+  void showToast() {
+    final scaffold = Scaffold.of(con);
+    scaffold.showSnackBar(
+      SnackBar(
+        content: const Text('Updating..'),
+      ),
+    );
+  }
+
+  var con;
 class NavBarScreen extends StatefulWidget {
   //final _calendars;
   NavBarScreen();
@@ -35,6 +47,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    con = context;
     final List<Widget> _children = [
       HomeScreen(
           //bloc: _bloc,
@@ -46,8 +59,9 @@ class _NavBarScreenState extends State<NavBarScreen> {
       ChatScreen(),
       //Test screen Here
       Container(),
-      Container(),
+      SettingsScreen(),
     ];
+
     return Scaffold(
       backgroundColor: primaryColor1,
       body: _children[_currentIndex],

@@ -15,12 +15,15 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        key: _scaffoldKey,
         floatingActionButton: CustomActionButton(
+          sKey: _scaffoldKey,
           calendar: widget.calendar,
         ),
         appBar: AppBar(
@@ -43,6 +46,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             CalendarsListWidget(
               calendarlist: widget.calendar.content,
+              skey: _scaffoldKey,
             ),
             Container(),
             Icon(Icons.directions_transit),

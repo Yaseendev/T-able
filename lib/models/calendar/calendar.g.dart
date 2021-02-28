@@ -25,13 +25,14 @@ class CalendarAdapter extends TypeAdapter<Calendar> {
       content: (fields[5] as List)?.cast<Calendar>(),
       events: (fields[6] as List)?.cast<Event>(),
       rootCalendarTitle: fields[7] as String,
-    );
+      googleCalendarId: fields[8] as String,
+    )..location = fields[9] as String;
   }
 
   @override
   void write(BinaryWriter writer, Calendar obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -47,7 +48,11 @@ class CalendarAdapter extends TypeAdapter<Calendar> {
       ..writeByte(6)
       ..write(obj.events)
       ..writeByte(7)
-      ..write(obj.rootCalendarTitle);
+      ..write(obj.rootCalendarTitle)
+      ..writeByte(8)
+      ..write(obj.googleCalendarId)
+      ..writeByte(9)
+      ..write(obj.location);
   }
 
   @override

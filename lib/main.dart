@@ -16,8 +16,8 @@ void main() async {
   Hive.registerAdapter(CalendarAdapter());
   events = await Hive.openBox<Event>('eventBox');
    allCalendars = await Hive.openBox<Calendar>('calendarsBox');
-  allCalendars.clear();
-  
+  //allCalendars.clear();
+  await Hive.openBox('settings');
   runApp(SmartProductivityApp());
 }
 

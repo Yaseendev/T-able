@@ -1,6 +1,7 @@
 import 'package:T_able/models/Event/event.dart';
 import 'package:googleapis/androidmanagement/v1.dart';
 import 'package:hive/hive.dart';
+import 'package:googleapis/calendar/v3.dart' as gc;
 
 part 'calendar.g.dart';
 
@@ -21,7 +22,11 @@ class Calendar extends HiveObject {
   @HiveField(6)
   List<Event> events;
   @HiveField(7)
-String rootCalendarTitle;
+  String rootCalendarTitle;
+  @HiveField(8)
+  String googleCalendarId;
+  @HiveField(9)
+  String location;
 
   Calendar(
       {this.title = 'No title',
@@ -31,12 +36,10 @@ String rootCalendarTitle;
       this.notes = '',
       this.content,
       this.events,
-      this.rootCalendarTitle});
+      this.rootCalendarTitle,
+      this.googleCalendarId,
+      this.location});
 
-    @override
-  String toString() {
-    return super.toString();
-  }
   // void addCalendars(List<Calendar> calendars) {
   //   content.addAll(calendars);
   //   notifyListeners();

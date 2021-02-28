@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:T_able/models/calendar/calendar.dart';
 import 'package:T_able/screens/calender_content.dart';
+import 'package:T_able/utils/google_calender_handler.dart';
 import 'package:T_able/widgets/calendar_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,8 +11,8 @@ import '../utils/vars_consts.dart';
 class CalendarsListWidget extends StatefulWidget {
   final calendarlist;
   //final bloc;
-
-  CalendarsListWidget({this.calendarlist});
+  final skey;
+  CalendarsListWidget({this.calendarlist, this.skey});
 
   @override
   _CalendarsListWidgetState createState() => _CalendarsListWidgetState();
@@ -27,15 +30,51 @@ class _CalendarsListWidgetState extends State<CalendarsListWidget> {
           ? ListView.builder(
               itemCount: widget.calendarlist.length,
               itemBuilder: (BuildContext context, int position) {
-                try{
-                     widget.calendarlist.getAt(position);}
-                     catch (e) {
-                      print(e);
-                      isHive = false;
-                    }
+                String gcId;
+                try {
+                  gcId = widget.calendarlist.getAt(position).googleCalendarId;
+                } catch (e) {
+                  print(e);
+                  gcId = widget.calendarlist[position].googleCalendarId;
+                  isHive = false;
+                }
                 return Dismissible(
                   onDismissed: (direction) {
                     //setState(() {
+                    final gcCalendar = GoogleCalendar();
+                    if (gcId != null) {
+                      Platform.isAndroid
+                          ? showDialog(
+                              context: widget.skey.currentContext,
+                              barrierDismissible: false,
+                              builder: (_) => AlertDialog(
+                                title: Text('Alert'),
+                                content:
+                                    Text('Delete Also from Google calendar?'),
+                                actions: [
+                                  FlatButton(
+                                    child: Text('No'),
+                                    onPressed: () => Navigator.pop(_),
+                                  ),
+                                  FlatButton(
+                                    child: Text('Yes'),
+                                    onPressed: () {
+                                      Navigator.pop(_);
+                                      gcCalendar.removeCalendar(gcId);
+                                      Scaffold.of(widget.skey.currentContext)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Calendar should be deleted from google calendar'),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          : showDialog(context: null);
+                    }
                     try {
                       widget.calendarlist.deleteAt(position);
                     } catch (e) {
@@ -70,13 +109,23 @@ class _CalendarsListWidgetState extends State<CalendarsListWidget> {
                         ? widget.calendarlist.getAt(position)
                         : widget.calendarlist[position],
                     onPress: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => CalendarScreen(
-                                calendar: isHive
-                                    ? widget.calendarlist.getAt(position)
-                                    : widget.calendarlist[position],
-                                calendars: widget.calendarlist,
-                              )));
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (BuildContext context) {
+                        isHive
+                            ? print('GC id : ' +
+                                widget.calendarlist
+                                    .getAt(position)
+                                    .googleCalendarId
+                                    .toString())
+                            : print('GC id : ' +
+                                widget.calendarlist[position].googleCalendarId);
+                        return CalendarScreen(
+                          calendar: isHive
+                              ? widget.calendarlist.getAt(position)
+                              : widget.calendarlist[position],
+                          calendars: widget.calendarlist,
+                        );
+                      }));
                     },
                   ),
                   key: UniqueKey(),

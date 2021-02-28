@@ -17,12 +17,15 @@ class CalendarsScreen extends StatefulWidget {
 }
 
 class _CalendarsScreenState extends State<CalendarsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  
   @override
   Widget build(BuildContext context) {
     //var allCalendars =Provider.of<ValueNotifier<List<Calendar>>>(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           title: TabBar(
             tabs: [
@@ -57,11 +60,12 @@ class _CalendarsScreenState extends State<CalendarsScreen> {
           children: [
             CalendarsListWidget(
               calendarlist: allCalendars,
+              skey: _scaffoldKey,
             ),
             Icon(Icons.directions_transit),
           ],
         );}),
-        floatingActionButton: CustomActionButton(),
+        floatingActionButton: CustomActionButton(sKey: _scaffoldKey,),
       ),
     );
   }

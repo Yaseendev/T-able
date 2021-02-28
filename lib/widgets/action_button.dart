@@ -1,28 +1,30 @@
 import 'dart:io';
-
 import 'package:T_able/models/Event/event.dart';
 import 'package:T_able/models/calendar/calendar.dart';
 import 'package:T_able/screens/image_screen.dart';
 import 'package:T_able/utils/DateformatingHelper.dart';
 import 'package:T_able/utils/bloc/calendarsList/calendarList_event.dart';
+import 'package:T_able/utils/google_calender_handler.dart';
 import 'package:T_able/utils/vars_consts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import 'package:image_pickers/image_pickers.dart';
-import 'package:provider/provider.dart';
+//import 'package:provider/provider.dart';
 import 'package:unicorndial/unicorndial.dart';
-
 import 'DropdownMenu.dart';
 import 'day_container.dart';
 import 'unicorndialer_opt.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 
 class CustomActionButton extends StatefulWidget {
-  Calendar calendar;
+  final Calendar calendar;
   //final bloc;
   //inal calendars;
+  final sKey;
   // ignore: avoid_init_to_null
-  CustomActionButton({this.calendar = null});
+  CustomActionButton({this.calendar = null, this.sKey});
   @override
   _CustomActionButtonState createState() => _CustomActionButtonState();
 }
@@ -66,15 +68,24 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   String _selectedCalendar;
   List<DropdownMenuItem<String>> _calendarDropdownItems;
   int _calIndex;
+  final gcCalendar = GoogleCalendar();
+  var settingsBox = Hive.box('settings');
+  var showAlert;
+  var gcSync;
+  bool isGcEnabled;
+  ProgressDialog pr;
+
   @override
   Widget build(BuildContext context) {
     // var allCalendars = Provider.of<ValueNotifier<List<Calendar>>>(context);
+    //_initProgressDialog(pr, 'Retrieving Calendar...');
     return UnicornDialer(
       parentHeroTag: "btn2",
       parentButtonBackground: primaryColor4,
       orientation: UnicornOrientation.VERTICAL,
       parentButton: Icon(Icons.add),
       childButtons: [
+        //Add calendar option
         profileOption(
           tag: 'add_cal',
           iconData: Icons.calendar_today_rounded,
@@ -119,48 +130,91 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                           actions: [
                                             FlatButton(
                                               child: Text('Add'),
-                                              onPressed: () {
+                                              onPressed: () async {
                                                 Navigator.pop(ctx);
+                                                //Show suync dialog
+
+                                                await showMaterialSyncAlert(
+                                                    ctx);
+                                                //showToast();
                                                 // setState(() {
                                                 String calTitle =
                                                     calendarController.text;
                                                 String rootCal;
+
                                                 if (widget.calendar == null) {
                                                   //setState(() {
-                                                  rootCal = calTitle;
-                                                  allCalendars.put(
-                                                      calTitle,
-                                                      Calendar(
-                                                        title: calTitle,
-                                                        content: [],
-                                                        events: [],
-                                                        rootCalendarTitle:
-                                                            rootCal,
-                                                      ));
+                                                  addRootCalLocal(calTitle);
+                                                  var gCalendar;
+                                                  if (isGcEnabled || gcSync) {
+                                                    await gcCalendar
+                                                        .addCalendar(calTitle)
+                                                        .then((value) =>
+                                                            gCalendar = value);
+                                                    if (gCalendar != null) {
+                                                      allCalendars.put(
+                                                          calTitle,
+                                                          Calendar(
+                                                            title: calTitle,
+                                                            content: [],
+                                                            events: [],
+                                                            rootCalendarTitle:
+                                                                rootCal,
+                                                            googleCalendarId:
+                                                                gCalendar.id,
+                                                          ));
+                                                      showToast(
+                                                          'Calendar added to google calendar');
+                                                    } else
+                                                      showToast(
+                                                          'Could not add the calendar to google calendar (Check the availability of the google calendar)');
+                                                  }
                                                   //});
-                                                  // allCalendars.value.add(Calendar(
-                                                  //   title: calendarController.text,
-                                                  //   content: [],
-                                                  //   events: [],
-                                                  // ));
                                                   // notifyListeners();
                                                 } else {
                                                   rootCal = widget.calendar
                                                       .rootCalendarTitle;
+                                                  var gCalendar;
+                                                  // widget.calendar.content
+                                                  //     .add(Calendar(
+                                                  //   title: calTitle,
+                                                  //   content: [],
+                                                  //   events: [],
+                                                  //   rootCalendarTitle: rootCal,
+                                                  // ));
+                                                  if (isGcEnabled || gcSync) {
+                                                    await gcCalendar
+                                                        .addCalendar(calTitle)
+                                                        .then((value) =>
+                                                            gCalendar = value);
+                                                  }
+                                                  //if (gCalendar != null)
                                                   widget.calendar.content
                                                       .add(Calendar(
                                                     title: calTitle,
                                                     content: [],
                                                     events: [],
                                                     rootCalendarTitle: rootCal,
+                                                    googleCalendarId:
+                                                        gCalendar != null
+                                                            ? gCalendar.id
+                                                            : null,
                                                   ));
+                                                  if (gCalendar != null) {
+                                                    showToast(
+                                                        'Calendar added to google calendar');
+                                                    print(
+                                                        'added to GC $calTitle: ${gCalendar.id}');
+                                                  } else {
+                                                    showToast(
+                                                        'Could not add the calendar to google calendar');
+                                                  }
                                                   allCalendars.put(
                                                       rootCal,
                                                       allCalendars
                                                           .get(rootCal));
                                                 }
                                                 //});
-                                                
                                                 print(calendarController.text);
                                                 calendarController.clear();
                                               },
@@ -211,7 +265,121 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                               ),
                               Center(
                                 child: FlatButton(
-                                    onPressed: () => Navigator.pop(_),
+                                    onPressed: () {
+                                      Navigator.pop(_);
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (ctx) => AlertDialog(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(20.0))),
+                                          elevation: 24.0,
+                                          title: Text('New Calendar'),
+                                          content: TextField(
+                                            autocorrect: true,
+                                            autofocus: true,
+                                            enableInteractiveSelection: true,
+                                            enableSuggestions: true,
+                                            decoration: new InputDecoration(
+                                                contentPadding: EdgeInsets.only(
+                                                    left: 5,
+                                                    bottom: 5,
+                                                    top: 10,
+                                                    right: 10),
+                                                hintText: 'Calendar ID'),
+                                            controller: calendarController,
+                                          ),
+                                          actions: [
+                                            FlatButton(
+                                              child: Text('Add'),
+                                              onPressed: () async {
+                                                Navigator.pop(ctx);
+                                                _initProgressDialog(
+                                                    'Retrieving Calendar...');
+                                                pr.show();
+                                                await gcCalendar
+                                                    .getCalendar(
+                                                        calendarController.text)
+                                                    .then((resCal) async {
+                                                  if (resCal != null) {
+                                                    if (widget.calendar ==
+                                                        null) {
+                                                      Calendar localCal =
+                                                          Calendar(
+                                                        title: resCal.summary,
+                                                        content: [],
+                                                        events: [],
+                                                        rootCalendarTitle:
+                                                            resCal.id,
+                                                        location:
+                                                            resCal.location,
+                                                        googleCalendarId:
+                                                            resCal.id,
+                                                      );
+                                                      List<Event> resEv = [];
+                                                      await extractGcEvents(
+                                                              resCal.id)
+                                                          .then((value) =>
+                                                              resEv = value);
+                                                      localCal.events
+                                                          .addAll(resEv);
+                                                      allCalendars.put(
+                                                          resCal.summary,
+                                                          localCal);
+                                                    } else {
+                                                      String rootCal = widget
+                                                          .calendar
+                                                          .rootCalendarTitle;
+                                                      Calendar localCal =
+                                                          Calendar(
+                                                        title: resCal.summary,
+                                                        notes:
+                                                            resCal.description,
+                                                        content: [],
+                                                        events: [],
+                                                        rootCalendarTitle:
+                                                            rootCal,
+                                                        googleCalendarId:
+                                                            resCal.id,
+                                                        location:
+                                                            resCal.location,
+                                                      );
+                                                      List<Event> resEv = [];
+                                                      await extractGcEvents(
+                                                              resCal.id)
+                                                          .then((value) =>
+                                                              resEv = value);
+                                                      localCal.events
+                                                          .addAll(resEv);
+                                                      widget.calendar.content
+                                                          .add(localCal);
+                                                      allCalendars.put(
+                                                          rootCal,
+                                                          allCalendars
+                                                              .get(rootCal));
+                                                    }
+                                                  }
+                                                  pr.hide().whenComplete(() {
+                                                    resCal != null
+                                                        ? showToast(
+                                                            'Calendar ${resCal.summary} fetched from google calendar')
+                                                        : showToast(
+                                                            'Could not find the calendar');
+                                                  });
+                                                });
+                                                calendarController.clear();
+                                              },
+                                            ),
+                                            FlatButton(
+                                              child: Text('Cancel'),
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                     child: Text('From google calendar')),
                               ),
                             ],
@@ -251,15 +419,17 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                           actions: [
                                             FlatButton(
                                               child: Text('Add'),
-                                              onPressed: () {
+                                              onPressed: () async {
                                                 Navigator.pop(ctx);
+                                                await showCupertSyncAlert(ctx);
                                                 //setState(() {
                                                 String calTitle =
                                                     calendarController.text;
                                                 String rootCal;
                                                 if (widget.calendar == null) {
                                                   // setState(() {
-                                                    rootCal = calTitle;
+                                                  rootCal = calTitle;
+                                                  var gCalendar;
                                                   allCalendars.put(
                                                       calTitle,
                                                       Calendar(
@@ -269,6 +439,29 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                         rootCalendarTitle:
                                                             rootCal,
                                                       ));
+                                                  if (isGcEnabled || gcSync) {
+                                                    await gcCalendar
+                                                        .addCalendar(calTitle)
+                                                        .then((value) =>
+                                                            gCalendar = value);
+                                                    if (gCalendar != null) {
+                                                      allCalendars.put(
+                                                          calTitle,
+                                                          Calendar(
+                                                            title: calTitle,
+                                                            content: [],
+                                                            events: [],
+                                                            rootCalendarTitle:
+                                                                rootCal,
+                                                            googleCalendarId:
+                                                                gCalendar.id,
+                                                          ));
+                                                      showToast(
+                                                          'Calendar added to google calendar');
+                                                    } else
+                                                      showToast(
+                                                          'Could not add the calendar to google calendar');
+                                                  }
                                                   //});
                                                   // allCalendars.value.add(Calendar(
                                                   //   title: calendarController.text,
@@ -276,13 +469,33 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                 } else {
                                                   rootCal = widget.calendar
                                                       .rootCalendarTitle;
+                                                  var gCalendar;
+                                                  if (isGcEnabled || gcSync) {
+                                                    await gcCalendar
+                                                        .addCalendar(calTitle)
+                                                        .then((value) =>
+                                                            gCalendar = value);
+                                                  }
                                                   widget.calendar.content
                                                       .add(Calendar(
                                                     title: calTitle,
-                                                     content: [],
+                                                    content: [],
                                                     events: [],
                                                     rootCalendarTitle: rootCal,
+                                                    googleCalendarId:
+                                                        gCalendar != null
+                                                            ? gCalendar.id
+                                                            : null,
                                                   ));
+                                                  if (gCalendar != null) {
+                                                    showToast(
+                                                        'Calendar added to google calendar');
+                                                    print(
+                                                        'added to GC $calTitle: ${gCalendar.id}');
+                                                  } else {
+                                                    showToast(
+                                                        'Could not add the calendar to google calendar');
+                                                  }
                                                   allCalendars.put(
                                                       rootCal,
                                                       allCalendars
@@ -316,6 +529,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                   );
           },
         ),
+        //Add event option
         profileOption(
             tag: 'add_events',
             iconData: Icons.add_alarm,
@@ -679,7 +893,6 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                 trailing: InkWell(
                                   child: Icon(Icons.add),
                                   onTap: () {
-                                    //TODO
                                     setState(() {
                                       //addAlarmTile(setState);
                                       alarmsWidgets.add(ListTile(
@@ -738,6 +951,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                       child: Text('Cancel'),
                                       onPressed: () {
                                         Navigator.pop(context);
+                                        //showToast();
                                       }),
                                   RaisedButton(
                                       color: Colors.lightBlue,
@@ -745,46 +959,238 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                         'Save',
                                         style: TextStyle(color: Colors.white),
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async {
                                         print(textController.text);
+                                        print('Date : $stDate');
+                                        print(
+                                            'Time : ${stTime.format(context)}');
+                                        showAlert = settingsBox.get('showAlert',
+                                            defaultValue: true);
+                                        gcSync = settingsBox.get('gcSync',
+                                            defaultValue: false);
+                                        isGcEnabled = false;
+                                        if (showAlert && !gcSync)
+                                          await showGeneralDialog(
+                                            context: context,
+                                            pageBuilder: (context, animation1,
+                                                animation2) {},
+                                            transitionBuilder:
+                                                (ctx, p1, p2, widget) {
+                                              return Transform.scale(
+                                                scale: p1.value,
+                                                child: Opacity(
+                                                  opacity: p1.value,
+                                                  child: AlertDialog(
+                                                    shape: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                    16.0)),
+                                                    title: Text('Alert'),
+                                                    content: Text(
+                                                        'Do you want to also add it to your google calendar ?'),
+                                                    //'Your calendars and events are synchronized with Google calendar\n(you may get asked once in a while to grant acess to your google account)'),
+                                                    actions: [
+                                                      FlatButton(
+                                                          child: Text('Yes'),
+                                                          onPressed: () {
+                                                            isGcEnabled = true;
+                                                            Navigator.pop(ctx);
+                                                          }),
+                                                      FlatButton(
+                                                          child: Text(
+                                                              'Yes,and always for all calendars'),
+                                                          onPressed: () {
+                                                            settingsBox.put(
+                                                                'showAlert',
+                                                                false);
+                                                            settingsBox.put(
+                                                                'gcSync', true);
+                                                            gcSync = true;
+                                                            Navigator.pop(ctx);
+                                                          }),
+                                                      FlatButton(
+                                                          child: Text('No'),
+                                                          onPressed: () {
+                                                            Navigator.pop(ctx);
+                                                          }),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            transitionDuration:
+                                                Duration(milliseconds: 400),
+                                            barrierDismissible: true,
+                                            barrierLabel: '',
+                                          );
                                         if (widget.calendar == null) {
-                                          allCalendars
-                                              .getAt(_calIndex)
-                                              .events
-                                              .add(Event(
-                                                title: textController.text,
-                                                startTime: stDate.add(Duration(
-                                                    hours: stTime.hour,
-                                                    minutes: stTime.minute)),
-                                                endTime: endDate.add(Duration(
-                                                    hours: endTime.hour,
-                                                    minutes: endTime.minute)),
-                                                alarms: [],
-                                                ending: {},
-                                                location: '',
-                                                notes: '',
-                                                repDays: [],
-                                                repetitionCycle: {},
-                                              ));
-                                        } else {
-                                          //events.add(Event(
-                                          widget.calendar.events.add(Event(
+                                          var gEvent;
+                                          Calendar currentCal =
+                                              allCalendars.getAt(_calIndex);
+
+                                          // currentCal.events.add(Event(
+                                          //   title: textController.text,
+                                          //   startTime: stDate.add(Duration(
+                                          //       hours: stTime.hour,
+                                          //       minutes: stTime.minute)),
+                                          //   endTime: endDate.add(Duration(
+                                          //       hours: endTime.hour,
+                                          //       minutes: endTime.minute)),
+                                          //   alarms: [],
+                                          //   ending: {},
+                                          //   location: '',
+                                          //   notes: '',
+                                          //   repDays: [],
+                                          //   repetitionCycle: {},
+                                          // ));
+                                          // allCalendars.put(
+                                          //     currentCal
+                                          //         .title,
+                                          //     currentCal);
+                                          Event newEvent = Event(
                                             title: textController.text,
-                                            startTime: stDate.add(Duration(
-                                                hours: stTime.hour,
-                                                minutes: stTime.minute)),
-                                            endTime: endDate.add(Duration(
-                                                hours: endTime.hour,
-                                                minutes: endTime.minute)),
+                                            startTime: stDate,
+                                            endTime: endDate,
                                             alarms: [],
                                             ending: {},
                                             location: '',
                                             notes: '',
                                             repDays: [],
                                             repetitionCycle: {},
-                                          ));
+                                          );
+                                          if (isGcEnabled || gcSync) {
+                                            String gcId;
+                                            if (currentCal.title == 'other')
+                                              gcId = 'primary';
+                                            else
+                                              gcId =
+                                                  currentCal.googleCalendarId;
+                                            if (gcId == null) {
+                                              var gCalendar =
+                                                  await gcCalendar.addCalendar(
+                                                      currentCal.title);
+                                              if (gCalendar != null) {
+                                                gcId = gCalendar.id;
+                                                currentCal.googleCalendarId =
+                                                    gcId;
+                                                allCalendars.put(
+                                                    currentCal.title,
+                                                    currentCal);
+                                              }
+                                              gcId != null
+                                                  ? showToast(
+                                                      'This Calendar was not in your google calendar and it should be added now')
+                                                  : showToast(
+                                                      'Could not add the calendar to google calendar (Check the availability of the google calendar)');
+                                            }
+                                            await gcCalendar
+                                                .addEvent(
+                                                    gcId,
+                                                    textController.text,
+                                                    stDate,
+                                                    endDate)
+                                                .then((ev) {
+                                              gEvent = ev;
+                                            });
+
+                                            // allCalendars.put(
+                                            //     currentCal.title, currentCal);
+                                            if (gEvent != null) {
+                                              newEvent.goggleCalendarEventId =
+                                                  gEvent.id;
+                                              showToast(
+                                                  'Event added to your google calendar');
+                                            } else
+                                              showToast(
+                                                  'Could not add the Event to google calendar (Check the availability of the google calendar)');
+                                          }
+                                          currentCal.events.add(newEvent);
+                                          allCalendars.put(
+                                              currentCal.title, currentCal);
+                                        } else {
+                                          //events.add(Event(
+                                          var rootCal =
+                                              widget.calendar.rootCalendarTitle;
+                                          var gEvent;
+                                          Calendar currentCal = widget.calendar;
+                                          // currentCal.events.add(Event(
+                                          //   title: textController.text,
+                                          //   startTime: stDate.add(Duration(
+                                          //       hours: stTime.hour,
+                                          //       minutes: stTime.minute)),
+                                          //   endTime: endDate.add(Duration(
+                                          //       hours: endTime.hour,
+                                          //       minutes: endTime.minute)),
+                                          //   alarms: [],
+                                          //   ending: {},
+                                          //   location: '',
+                                          //   notes: '',
+                                          //   repDays: [],
+                                          //   repetitionCycle: {},
+                                          // ));
+                                          // allCalendars.put(rootCal,
+                                          //     allCalendars.get(rootCal));
+                                          Event newEvent = Event(
+                                            title: textController.text,
+                                            startTime: stDate,
+                                            endTime: endDate,
+                                            alarms: [],
+                                            ending: {},
+                                            location: '',
+                                            notes: '',
+                                            repDays: [],
+                                            repetitionCycle: {},
+                                          );
+                                          if (isGcEnabled || gcSync) {
+                                            String gcId;
+                                            if (currentCal.title == 'other')
+                                              gcId = 'primary';
+                                            else
+                                              gcId =
+                                                  currentCal.googleCalendarId;
+                                            if (gcId == null) {
+                                              var gCalendar =
+                                                  await gcCalendar.addCalendar(
+                                                      currentCal.title);
+                                              if (gCalendar != null) {
+                                                gcId = gCalendar.id;
+                                                currentCal.googleCalendarId =
+                                                    gcId;
+                                                allCalendars.put(
+                                                    currentCal.title,
+                                                    currentCal);
+                                              }
+                                              gcId != null
+                                                  ? showToast(
+                                                      'This Calendar was not in your google calendar and it should be added now')
+                                                  : showToast(
+                                                      'Could not add the calendar to google calendar (Check the availability of the google calendar)');
+                                            }
+                                            await gcCalendar
+                                                .addEvent(
+                                                    gcId,
+                                                    textController.text,
+                                                    stDate,
+                                                    endDate)
+                                                .then((evt) => gEvent = evt);
+                                            if (gEvent != null) {
+                                              newEvent.goggleCalendarEventId =
+                                                  gEvent.id;
+
+                                              showToast(
+                                                  'Event added to your google calendar');
+                                            } else
+                                              showToast(
+                                                  'Could not add the Event to google calendar (Check the availability of the google calendar)');
+                                          }
+                                          currentCal.events.add(newEvent);
+                                          allCalendars.put(rootCal,
+                                              allCalendars.get(rootCal));
+                                          //events.close();
+                                          Navigator.pop(context);
                                         }
-                                        //events.close();
+
                                         Navigator.pop(context);
                                       }),
                                 ],
@@ -808,7 +1214,11 @@ class _CustomActionButtonState extends State<CustomActionButton> {
       textController.clear();
     }
     int curH = TimeOfDay.now().hour;
-    selectedStartDate = myDateFormat(DateTime.now());
+    stDate = DateTime.now();
+    endDate = DateTime.now();
+    stTime = TimeOfDay.now();
+    endTime = TimeOfDay.now().replacing(hour: curH + 1);
+    selectedStartDate = myDateFormat(stDate);
     selectedStartTime = TimeOfDay.now().format(context);
     selectedEndDate = myDateFormat(DateTime.now());
     selectedEndTime = TimeOfDay.now().replacing(hour: curH + 1).format(context);
@@ -835,6 +1245,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
           print(_calIndex);
         },
       ));
+      if (allCalendars.getAt(i).title == 'other') _calIndex = i;
     }
   }
 
@@ -848,10 +1259,168 @@ class _CustomActionButtonState extends State<CustomActionButton> {
     return days;
   }
 
+  Future<void> showMaterialSyncAlert(BuildContext ctx) async {
+    showAlert = settingsBox.get('showAlert', defaultValue: true);
+    gcSync = settingsBox.get('gcSync', defaultValue: false);
+    isGcEnabled = false;
+    if (showAlert && !gcSync)
+      await showGeneralDialog(
+        context: ctx,
+        // ignore: missing_return
+        pageBuilder: (context, animation1, animation2) {},
+        transitionBuilder: (contex, p1, p2, widget) {
+          return Transform.scale(
+            scale: p1.value,
+            child: Opacity(
+              opacity: p1.value,
+              child: AlertDialog(
+                shape: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                title: Text('Alert'),
+                content:
+                    Text('Do you want to also add it to google calendar ?'),
+                //'Your calendars and events are synchronized with Google calendar\n(you may get asked once in a while to grant acess to your google account)'),
+                actions: [
+                  FlatButton(
+                      child: Text('Yes'),
+                      onPressed: () {
+                        isGcEnabled = true;
+                        Navigator.pop(contex);
+                      }),
+                  FlatButton(
+                      child: Text('Yes,and always for all calendars'),
+                      onPressed: () {
+                        settingsBox.put('showAlert', false);
+                        settingsBox.put('gcSync', true);
+                        gcSync = true;
+                        Navigator.pop(contex);
+                      }),
+                  FlatButton(
+                      child: Text('No'),
+                      onPressed: () {
+                        Navigator.pop(contex);
+                      }),
+                ],
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 400),
+        barrierDismissible: true,
+        barrierLabel: '',
+      );
+  }
+
+  Future<void> showCupertSyncAlert(BuildContext ctx) async {
+    showAlert = settingsBox.get('showAlert', defaultValue: true);
+    gcSync = settingsBox.get('gcSync', defaultValue: false);
+    isGcEnabled = false;
+    if (showAlert && !gcSync)
+      await showGeneralDialog(
+        context: ctx,
+        // ignore: missing_return
+        pageBuilder: (context, animation1, animation2) {},
+        transitionBuilder: (contex, p1, p2, widget) {
+          return Transform.scale(
+            scale: p1.value,
+            child: Opacity(
+              opacity: p1.value,
+              child: CupertinoAlertDialog(
+                title: Text('Alert'),
+                content:
+                    Text('Do you want to also add it to google calendar ?'),
+                //'Your calendars and events are synchronized with Google calendar\n(you may get asked once in a while to grant acess to your google account)'),
+                actions: [
+                  FlatButton(
+                      child: Text('Yes'),
+                      onPressed: () {
+                        isGcEnabled = true;
+                        Navigator.pop(contex);
+                      }),
+                  FlatButton(
+                      child: Text('Yes,and always for all calendars'),
+                      onPressed: () {
+                        settingsBox.put('showAlert', false);
+                        settingsBox.put('gcSync', true);
+                        gcSync = true;
+                        Navigator.pop(contex);
+                      }),
+                  FlatButton(
+                      child: Text('No'),
+                      onPressed: () {
+                        Navigator.pop(contex);
+                      }),
+                ],
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 400),
+        barrierDismissible: true,
+        barrierLabel: '',
+      );
+  }
+
+  void showToast(String m) {
+    if (widget.sKey.currentContext != null) {
+      final scaffold = Scaffold.of(widget.sKey.currentContext);
+      scaffold.showSnackBar(
+        SnackBar(
+          content: Text(m),
+        ),
+      );
+    }
+  }
+
+  void _initProgressDialog(String message) {
+    pr = ProgressDialog(widget.sKey.currentContext);
+    pr.style(
+        message: message,
+        borderRadius: 10.0,
+        backgroundColor: Colors.white,
+        progressWidget: CircularProgressIndicator(),
+        elevation: 10.0,
+        insetAnimCurve: Curves.easeInOut,
+        padding: const EdgeInsets.all(8.0),
+        messageTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 17.0,
+        ));
+  }
+
+  void addRootCalLocal(String calTitle) {
+    allCalendars.put(
+        calTitle,
+        Calendar(
+          title: calTitle,
+          content: [],
+          events: [],
+          rootCalendarTitle: calTitle,
+        ));
+  }
+
+  Future<List<Event>> extractGcEvents(String gCId) async {
+    var gCList = await gcCalendar.getAllEvents(gCId);
+    List<Event> events = [];
+    if (gCList != null)
+      for (var item in gCList.items) {
+        events.add(Event(
+          title: item.summary,
+          startTime: item.start.dateTime,
+          endTime: item.end.dateTime,
+          location: item.location,
+          notes: item.description,
+          //TODO: add reccurence
+        ));
+      }
+    return events;
+  }
+
   // @override
   // void dispose() {
   //   super.dispose();
   //   if(widget.bloc != null)
   //   widget.bloc.dispose();
   // }
+
 }
