@@ -61,13 +61,18 @@ class _CalendarsListWidgetState extends State<CalendarsListWidget> {
                                     onPressed: () {
                                       Navigator.pop(_);
                                       gcCalendar.removeCalendar(gcId);
-                                      Scaffold.of(widget.skey.currentContext)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Calendar should be deleted from google calendar'),
-                                        ),
-                                      );
+                                      widget.skey.currentState
+                                          .showSnackBar(SnackBar(
+                                        content: Text(
+                                            'Calendar should be deleted from google calendar'),
+                                      ));
+                                      //   )); Scaffold.of(widget.skey.currentContext)
+                                      //     .showSnackBar(
+                                      //   SnackBar(
+                                      //     content: Text(
+                                      //         'Calendar should be deleted from google calendar'),
+                                      //   ),
+                                      // );
                                     },
                                   ),
                                 ],
@@ -80,9 +85,12 @@ class _CalendarsListWidgetState extends State<CalendarsListWidget> {
                     } catch (e) {
                       print(e);
                       isHive = false;
+                      String root =
+                          widget.calendarlist[position].rootCalendarTitle;
                       widget.calendarlist.removeAt(position);
+                      allCalendars.put(root, allCalendars.get(root));
                     }
-                    print(widget.calendarlist.toMap());
+                    //print(widget.calendarlist.toMap());
                     // });
                   },
                   secondaryBackground: Container(
@@ -117,8 +125,8 @@ class _CalendarsListWidgetState extends State<CalendarsListWidget> {
                                     .getAt(position)
                                     .googleCalendarId
                                     .toString())
-                            : print('GC id : ' +
-                                widget.calendarlist[position].googleCalendarId);
+                            : print(
+                                'GC id : ${widget.calendarlist[position].googleCalendarId}');
                         return CalendarScreen(
                           calendar: isHive
                               ? widget.calendarlist.getAt(position)

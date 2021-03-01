@@ -2,6 +2,7 @@ import 'package:T_able/models/Event/event.dart';
 import 'package:T_able/models/calendar/calendar.dart';
 import 'package:T_able/widgets/action_button.dart';
 import 'package:T_able/widgets/calendarsList.dart';
+import 'package:T_able/widgets/eventsList.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -9,7 +10,7 @@ class CalendarScreen extends StatefulWidget {
   final Calendar calendar;
   final calendars;
   //final bloc;
-  CalendarScreen({this.calendar,this.calendars});
+  CalendarScreen({this.calendar, this.calendars});
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
 }
@@ -34,9 +35,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 tabs: [
                   Tab(text: 'Calendars'),
                   Tab(text: 'Events'),
-                  Tab(
-                    text: 'Alarms',
-                  )
+                  Tab(text: 'Alarms')
                 ],
               ),
             ],
@@ -48,7 +47,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               calendarlist: widget.calendar.content,
               skey: _scaffoldKey,
             ),
-            Container(),
+            EventsListWidget( calendar: widget.calendar,skey: _scaffoldKey,),
+           // Container(),
             Icon(Icons.directions_transit),
           ],
         ),

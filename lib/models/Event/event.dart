@@ -28,7 +28,7 @@ class Event extends HiveObject {
   @HiveField(8)
   String notes;
   @HiveField(9)
-  String goggleCalendarEventId;
+  String googleCalendarEventId;
 
   Event(
       {this.title,
@@ -40,7 +40,7 @@ class Event extends HiveObject {
       this.repDays,
       this.ending,
       this.alarms,
-      this.goggleCalendarEventId});
+      this.googleCalendarEventId});
 
   get getStartDate => myDateFormat(startTime);
   //get getStartTime =>

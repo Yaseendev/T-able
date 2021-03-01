@@ -187,28 +187,32 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                         .addCalendar(calTitle)
                                                         .then((value) =>
                                                             gCalendar = value);
+                                                    if (gCalendar == null)
+                                                      showToast(
+                                                          'Could not add the calendar to google calendar');
                                                   }
                                                   //if (gCalendar != null)
-                                                  widget.calendar.content
-                                                      .add(Calendar(
-                                                    title: calTitle,
-                                                    content: [],
-                                                    events: [],
-                                                    rootCalendarTitle: rootCal,
-                                                    googleCalendarId:
-                                                        gCalendar != null
-                                                            ? gCalendar.id
-                                                            : null,
-                                                  ));
+                                                  widget.sKey.currentState
+                                                      .setState(() {
+                                                    widget.calendar.content
+                                                        .add(Calendar(
+                                                      title: calTitle,
+                                                      content: [],
+                                                      events: [],
+                                                      rootCalendarTitle:
+                                                          rootCal,
+                                                      googleCalendarId:
+                                                          gCalendar != null
+                                                              ? gCalendar.id
+                                                              : null,
+                                                    ));
+                                                  });
                                                   if (gCalendar != null) {
                                                     showToast(
                                                         'Calendar added to google calendar');
                                                     print(
                                                         'added to GC $calTitle: ${gCalendar.id}');
-                                                  } else {
-                                                    showToast(
-                                                        'Could not add the calendar to google calendar');
-                                                  }
+                                                  } else {}
                                                   allCalendars.put(
                                                       rootCal,
                                                       allCalendars
@@ -1097,7 +1101,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             // allCalendars.put(
                                             //     currentCal.title, currentCal);
                                             if (gEvent != null) {
-                                              newEvent.goggleCalendarEventId =
+                                              newEvent.googleCalendarEventId =
                                                   gEvent.id;
                                               showToast(
                                                   'Event added to your google calendar');
@@ -1175,7 +1179,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                     endDate)
                                                 .then((evt) => gEvent = evt);
                                             if (gEvent != null) {
-                                              newEvent.goggleCalendarEventId =
+                                              newEvent.googleCalendarEventId =
                                                   gEvent.id;
 
                                               showToast(
@@ -1355,7 +1359,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
             ),
           );
         },
-        transitionDuration: Duration(milliseconds: 400),
+        transitionDuration: Duration(milliseconds: 300),
         barrierDismissible: true,
         barrierLabel: '',
       );
@@ -1363,12 +1367,14 @@ class _CustomActionButtonState extends State<CustomActionButton> {
 
   void showToast(String m) {
     if (widget.sKey.currentContext != null) {
-      final scaffold = Scaffold.of(widget.sKey.currentContext);
-      scaffold.showSnackBar(
-        SnackBar(
-          content: Text(m),
-        ),
-      );
+      final snackBar = SnackBar(content: Text(m));
+      widget.sKey.currentState.showSnackBar(snackBar);
+      //final scaffold = Scaffold.of(widget.sKey.currentContext);
+      //scaffold.showSnackBar(
+      //SnackBar(
+      //content: Text(m),
+      //),
+      //);
     }
   }
 
