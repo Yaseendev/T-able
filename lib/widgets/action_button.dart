@@ -9,6 +9,7 @@ import 'package:T_able/utils/vars_consts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:image_pickers/image_pickers.dart';
 //import 'package:provider/provider.dart';
@@ -17,6 +18,7 @@ import 'DropdownMenu.dart';
 import 'day_container.dart';
 import 'unicorndialer_opt.dart';
 import 'package:progress_dialog/progress_dialog.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CustomActionButton extends StatefulWidget {
   final Calendar calendar;
@@ -33,6 +35,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   TextEditingController textController = new TextEditingController(),
       numController,
       calendarController = new TextEditingController();
+  TextEditingController _locationTextController;
   String selectedStartDate,
       selectedStartTime,
       selectedEndTime,
@@ -74,11 +77,38 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   var gcSync;
   bool isGcEnabled;
   ProgressDialog pr;
+  bool _showMap = false;
+  var currentPosition;
+  CameraPosition _kInitialPosition;
+  GoogleMapController mapController;
+  ScrollController scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    getGeoLocation();
+    Geolocator.getCurrentPosition().then((value) => currentPosition = value);
+    print(currentPosition);
+    _kInitialPosition =
+        CameraPosition(target: LatLng(33.5138073, 36.2765279), zoom: 11.0);
+  }
+
+  void getGeoLocation() async {
+    currentPosition = await Geolocator.getCurrentPosition();
+  }
+
+  void onMapCreated(GoogleMapController controller) async {
+    setState(() {
+      mapController = controller;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     // var allCalendars = Provider.of<ValueNotifier<List<Calendar>>>(context);
     //_initProgressDialog(pr, 'Retrieving Calendar...');
+    print(currentPosition);
+
     return UnicornDialer(
       parentHeroTag: "btn2",
       parentButtonBackground: primaryColor4,
@@ -552,7 +582,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                         height: MediaQuery.of(context).size.height - 80.0,
                         //color: Colors.blueAccent,
                         child: SingleChildScrollView(
-                          //controller: scrollController,
+                          controller: scrollController,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -661,8 +691,11 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                               TimePickerEntryMode.input,
                                           initialTime: TimeOfDay.now()
                                               .replacing(
-                                                  hour:
-                                                      TimeOfDay.now().hour + 1))
+                                                  hour: TimeOfDay.now().hour ==
+                                                          23
+                                                      ? 0
+                                                      : TimeOfDay.now().hour +
+                                                          1))
                                       .then((value) {
                                     endTime = value;
                                     if (value != null)
@@ -884,8 +917,51 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                           top: 10,
                                           right: 10),
                                       hintText: "Add Location"),
+                                  controller: _locationTextController,
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.map),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showMap = !_showMap;
+                                    });
+                                  },
                                 ),
                               ),
+                              _showMap
+                                  ? Container(
+                                      height: 300,
+                                      child:
+                                          //googleMap,
+                                          GoogleMap(
+                                        buildingsEnabled: true,
+                                        compassEnabled: true,
+                                        mapToolbarEnabled: true,
+                                        myLocationButtonEnabled: true,
+                                        myLocationEnabled: true,
+                                        trafficEnabled: true,
+                                        rotateGesturesEnabled: true,
+                                        scrollGesturesEnabled: true,
+                                        zoomGesturesEnabled: true,
+                                        onMapCreated:
+                                            (GoogleMapController controller) {
+                                          setState(() {
+                                            mapController = controller;
+                                          });
+                                        },
+                                        initialCameraPosition:
+                                            _kInitialPosition,
+                                        onTap: (LatLng pos) {
+                                          print(pos);
+                                          setState(() {
+                                           // _lastTap = pos;
+                                            _locationTextController.text =
+                                                '${pos.latitude},${pos.longitude}';
+                                          });
+                                        },
+                                      ),
+                                    )
+                                  : Container(),
                               Divider(
                                 color: Colors.grey,
                               ),
@@ -1213,6 +1289,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   }
 
   void _initSheet() {
+    //scrollController.
     if (textController != null) {
       print(textController.text);
       textController.clear();
@@ -1221,16 +1298,23 @@ class _CustomActionButtonState extends State<CustomActionButton> {
     stDate = DateTime.now();
     endDate = DateTime.now();
     stTime = TimeOfDay.now();
-    endTime = TimeOfDay.now().replacing(hour: curH + 1);
+    curH == 23
+        ? endTime = TimeOfDay.now().replacing(hour: 0)
+        : endTime = TimeOfDay.now().replacing(hour: curH + 1);
     selectedStartDate = myDateFormat(stDate);
     selectedStartTime = TimeOfDay.now().format(context);
     selectedEndDate = myDateFormat(DateTime.now());
-    selectedEndTime = TimeOfDay.now().replacing(hour: curH + 1).format(context);
+    selectedEndTime = TimeOfDay.now()
+        .replacing(hour: curH == 23 ? 0 : curH + 1)
+        .format(context);
     endOnDate = num2month(DateTime.now().add(Duration(days: 120)).month) +
         ' ' +
         DateTime.now().add(Duration(days: 120)).day.toString() +
         ', ' +
         DateTime.now().add(Duration(days: 120)).year.toString();
+    _showMap = false;
+    _locationTextController = TextEditingController();
+
     _options = EndingOptions.never;
     alarmsWidgets = [];
     alarmOpSelect = 'Minutes';
@@ -1251,6 +1335,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
       ));
       if (allCalendars.getAt(i).title == 'other') _calIndex = i;
     }
+    // _showMap = false;
   }
 
   List<Widget> displayRepDays() {
