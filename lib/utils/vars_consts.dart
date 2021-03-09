@@ -18,5 +18,5 @@ const clientID =
     '900920692727-3pojcvst9rek182r3gluud7e4rdpt15e.apps.googleusercontent.com';
 const clientSecret = 'Wqv5TvtOWXXmaO1rBpt9r9k6';
 const scopes = [gc.CalendarApi.CalendarScope];
-const kDistanceApiKey = '';
-const kDistanceApiUrl = '';
+const kDistanceApiKey = 'prj_test_pk_e5c000a2613315e821a5590d2180ebbba5c11007';
+const kDistanceApiUrl = 'https://api.radar.io/v1/route/distance';

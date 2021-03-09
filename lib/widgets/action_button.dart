@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:T_able/models/Event/event.dart';
 import 'package:T_able/models/calendar/calendar.dart';
 import 'package:T_able/screens/image_screen.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:image_pickers/image_pickers.dart';
+import 'package:location/location.dart';
 //import 'package:provider/provider.dart';
 import 'package:unicorndial/unicorndial.dart';
 import 'DropdownMenu.dart';
@@ -19,6 +21,8 @@ import 'day_container.dart';
 import 'unicorndialer_opt.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CustomActionButton extends StatefulWidget {
   final Calendar calendar;
@@ -41,9 +45,10 @@ class _CustomActionButtonState extends State<CustomActionButton> {
       selectedEndTime,
       selectedEndDate,
       endOnDate,
-      alarmOpSelect;
+      alarmOpSelect,
+      selectedAlarmTime;
   DateTime stDate, endDate;
-  TimeOfDay stTime, endTime;
+  TimeOfDay stTime, endTime, alarmTime;
   EndingOptions _options;
   List<Widget> alarmsWidgets = [];
   List<DropdownMenuItem<String>> s = [
@@ -82,6 +87,8 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   CameraPosition _kInitialPosition;
   GoogleMapController mapController;
   ScrollController scrollController;
+  bool _enableSA;
+  String _sAText;
 
   @override
   void initState() {
@@ -649,10 +656,12 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                       .then((value) {
                                     print(value.hour);
                                     stTime = value;
+                                    alarmTime = stTime;
                                     if (value != null)
                                       setState(() {
                                         selectedStartTime =
                                             value.format(context);
+                                        selectedAlarmTime = selectedStartTime;
                                       });
                                   }),
                                 ),
@@ -872,30 +881,194 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                 title: Text('Alarm'),
                               ),
                               alarmEnabled
-                                  ? Center(
-                                      child: ToggleButtons(
-                                        children: [
-                                          Icon(Icons.ac_unit),
-                                          Icon(Icons.access_alarms_sharp),
-                                          Icon(Icons.account_balance_wallet),
-                                        ],
-                                        isSelected: _alarmOptSelection,
-                                        onPressed: (index) {
-                                          if (_alarmOptSelection
-                                                  .contains(true) &&
-                                              _alarmOptSelection[index] != true)
-                                            print('More then one selected');
-                                          else {
-                                            setState(() {
-                                              _alarmOptSelection[index] =
-                                                  !_alarmOptSelection[index];
-                                            });
-                                          }
-                                        },
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(30.0)),
-                                        borderWidth: 5,
-                                      ),
+                                  ? Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        RaisedButton(
+                                            child: Text(_sAText),
+                                            onPressed: () async {
+                                              var prefBox =
+                                                  Hive.box('preferences');
+                                              if (_enableSA) {
+                                                setState(() {
+                                                  _sAText =
+                                                      'Turn Off Smart Alarm';
+                                                  _enableSA = false;
+                                                });
+                                                if (_locationTextController
+                                                        .text !=
+                                                    null) {
+                                                  var lat, long;
+                                                  await Location.instance
+                                                      .getLocation()
+                                                      .then((value) {
+                                                    lat = value.latitude;
+                                                    long = value.longitude;
+                                                    print(value.latitude
+                                                        .toString());
+                                                  });
+                                                  var queryParameters = {
+                                                    'origin':
+                                                        '40.78382,-73.97536', //'$lat,$long',
+                                                    'destination':
+                                                        '40.70390,-73.98690', //_locationTextController.text,
+                                                    'modes': 'foot,car',
+                                                    'units': 'metric'
+                                                  };
+                                                  var uri = Uri.https(
+                                                      'api.radar.io',
+                                                      '/v1/route/distance',
+                                                      queryParameters);
+                                                  _initProgressDialog(
+                                                      'Suggesting a Time...');
+                                                  pr.show();
+                                                  http.Response response =
+                                                      await http.get(uri,
+                                                          headers: {
+                                                        'Authorization':
+                                                            kDistanceApiKey
+                                                      });
+                                                  final Map responseBody = json
+                                                      .decode(response.body);
+                                                  final int statusCode =
+                                                      response.statusCode;
+                                                  if (statusCode != 200 ||
+                                                      responseBody == null) {
+                                                    print('falied');
+                                                    setState(() {
+                                                      _sAText =
+                                                          'Turn On Smart Alarm';
+                                                      _enableSA = true;
+                                                    });
+                                                  } else {
+                                                    print(
+                                                        'String: ${response.body}');
+                                                    var carDurTxt =
+                                                        responseBody['routes']
+                                                                    ['car']
+                                                                ['duration']
+                                                            ['text'];
+                                                    var footDurTxt =
+                                                        responseBody['routes']
+                                                                    ['foot']
+                                                                ['duration']
+                                                            ['text'];
+                                                    var carDurVal =
+                                                        responseBody['routes']
+                                                                    ['car']
+                                                                ['duration']
+                                                            ['value'];
+                                                    var footDurVal =
+                                                        responseBody['routes']
+                                                                    ['foot']
+                                                                ['duration']
+                                                            ['value'];
+                                                    var dist =
+                                                        responseBody['routes']
+                                                                    ['car']
+                                                                ['distance']
+                                                            ['text'];
+                                                    var bestTime = min(
+                                                        double.parse(carDurVal),
+                                                        double.parse(
+                                                            footDurVal));
+                                                    var readyTime = prefBox.get(
+                                                        'readyTime',
+                                                        defaultValue: 60);
+                                                    print(bestTime);
+                                                    var recommendedTime =
+                                                        bestTime + readyTime;
+                                                    showDialog(
+                                                        context: context,
+                                                        barrierDismissible:
+                                                            true,
+                                                        builder:
+                                                            (ctx) =>
+                                                                AlertDialog(
+                                                                  shape: RoundedRectangleBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.all(
+                                                                              Radius.circular(20.0))),
+                                                                  elevation:
+                                                                      24.0,
+                                                                  title: Text(
+                                                                      'Alarm Suggestion Summary'),
+                                                                  content: Text('The destination between your location and the event location is $dist\n' +
+                                                                      'Travel duration by car is $carDurTxt\n' +
+                                                                      'Travel duration by foot is $footDurTxt\n' +
+                                                                      'Your alarm will be set ${recommendedTime / 60} hours before this event start time'),
+                                                                  actions: [
+                                                                    FlatButton(
+                                                                        child: Text(
+                                                                            'Ok'),
+                                                                        onPressed:
+                                                                            () {
+                                                                          Navigator.pop(
+                                                                              ctx);
+                                                                          alarmTime =
+                                                                              stTime.replacing(minute: stTime.hour * 60 + stTime.minute + recommendedTime.round());
+                                                                        })
+                                                                  ],
+                                                                ));
+                                                  }
+                                                  pr.hide().whenComplete(() {});
+                                                }
+                                              } else {
+                                                setState(() {
+                                                  _sAText =
+                                                      'Turn On Smart Alarm';
+                                                  _enableSA = true;
+                                                });
+                                              }
+                                            }),
+                                        InkWell(
+                                          child: Container(
+                                            padding: EdgeInsets.all(5),
+                                            color: Color(0xFFEFF3F2),
+                                            child: Text(selectedAlarmTime),
+                                          ),
+                                          onTap: () => showTimePicker(
+                                                  context: context,
+                                                  initialTime: stTime)
+                                              .then((value) {
+                                            if (value != null) {
+                                              alarmTime = value;
+                                              setState(() {
+                                                selectedAlarmTime =
+                                                    value.format(context);
+                                              });
+                                            }
+                                          }),
+                                        ),
+                                      ],
+
+                                      //Center(
+                                      //     child: ToggleButtons(
+                                      //       children: [
+                                      //         Icon(Icons.ac_unit),
+                                      //         Icon(Icons.access_alarms_sharp),
+                                      //         Icon(Icons.account_balance_wallet),
+                                      //       ],
+                                      //       isSelected: _alarmOptSelection,
+                                      //       onPressed: (index) {
+                                      //         if (_alarmOptSelection
+                                      //                 .contains(true) &&
+                                      //             _alarmOptSelection[index] != true)
+                                      //           print('More then one selected');
+                                      //         else {
+                                      //           setState(() {
+                                      //             _alarmOptSelection[index] =
+                                      //                 !_alarmOptSelection[index];
+                                      //           });
+                                      //         }
+                                      //       },
+                                      //       borderRadius: BorderRadius.all(
+                                      //           Radius.circular(30.0)),
+                                      //       borderWidth: 5,
+                                      //     ),
                                     )
                                   : Container(),
                               Divider(
@@ -931,9 +1104,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                               _showMap
                                   ? Container(
                                       height: 300,
-                                      child:
-                                          //googleMap,
-                                          GoogleMap(
+                                      child: GoogleMap(
                                         buildingsEnabled: true,
                                         compassEnabled: true,
                                         mapToolbarEnabled: true,
@@ -954,7 +1125,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                         onTap: (LatLng pos) {
                                           print(pos);
                                           setState(() {
-                                           // _lastTap = pos;
+                                            // _lastTap = pos;
                                             _locationTextController.text =
                                                 '${pos.latitude},${pos.longitude}';
                                           });
@@ -966,7 +1137,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                 color: Colors.grey,
                               ),
                               ListTile(
-                                leading: Icon(Icons.access_alarm),
+                                leading: Icon(Icons.notifications_on),
                                 title: Column(
                                   children: alarmsWidgets,
                                 ),
@@ -1104,6 +1275,14 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             barrierDismissible: true,
                                             barrierLabel: '',
                                           );
+                                           String parsedMonth = stDate.month < 10
+                                              ? '0${stDate.month}'
+                                              : '${stDate.month}';
+                                          String parsedDay = stDate.day < 10
+                                              ? '0${stDate.day}'
+                                              : '${stDate.day}';
+                                          var alarmDate = DateTime.parse(
+                                              '${stDate.year}-$parsedMonth-$parsedDay ${alarmTime.hour}:${alarmTime.minute}:00');
                                         if (widget.calendar == null) {
                                           var gEvent;
                                           Calendar currentCal =
@@ -1128,16 +1307,24 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                           //     currentCal
                                           //         .title,
                                           //     currentCal);
+                                         
                                           Event newEvent = Event(
                                             title: textController.text,
                                             startTime: stDate,
                                             endTime: endDate,
                                             alarms: [],
                                             ending: {},
-                                            location: '',
+                                            location: _locationTextController !=
+                                                    null
+                                                ? _locationTextController.text
+                                                : '',
                                             notes: '',
                                             repDays: [],
                                             repetitionCycle: {},
+                                            alarmTime: alarmEnabled
+                                                ? alarmDate
+                                                : null,
+                                            isSmartAlarm: _enableSA,
                                           );
                                           if (isGcEnabled || gcSync) {
                                             String gcId;
@@ -1221,6 +1408,10 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             notes: '',
                                             repDays: [],
                                             repetitionCycle: {},
+                                            alarmTime: alarmEnabled
+                                                ? alarmDate
+                                                : null,
+                                            isSmartAlarm: _enableSA,
                                           );
                                           if (isGcEnabled || gcSync) {
                                             String gcId;
@@ -1312,6 +1503,8 @@ class _CustomActionButtonState extends State<CustomActionButton> {
         DateTime.now().add(Duration(days: 120)).day.toString() +
         ', ' +
         DateTime.now().add(Duration(days: 120)).year.toString();
+    selectedAlarmTime = selectedStartTime;
+    alarmTime = stTime;
     _showMap = false;
     _locationTextController = TextEditingController();
 
@@ -1335,7 +1528,8 @@ class _CustomActionButtonState extends State<CustomActionButton> {
       ));
       if (allCalendars.getAt(i).title == 'other') _calIndex = i;
     }
-    // _showMap = false;
+    _sAText = 'Turn On Smart Alarm';
+    _enableSA = false;
   }
 
   List<Widget> displayRepDays() {
@@ -1506,6 +1700,8 @@ class _CustomActionButtonState extends State<CustomActionButton> {
       }
     return events;
   }
+
+  void showAndroidAlertDialog() {}
 
   // @override
   // void dispose() {

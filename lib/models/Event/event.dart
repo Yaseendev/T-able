@@ -29,6 +29,11 @@ class Event extends HiveObject {
   String notes;
   @HiveField(9)
   String googleCalendarEventId;
+  @HiveField(10)
+  DateTime alarmTime;
+  @HiveField(11)
+  bool isSmartAlarm;
+
 
   Event(
       {this.title,
@@ -40,7 +45,7 @@ class Event extends HiveObject {
       this.repDays,
       this.ending,
       this.alarms,
-      this.googleCalendarEventId});
+      this.googleCalendarEventId,this.alarmTime,this.isSmartAlarm=false});
 
   get getStartDate => myDateFormat(startTime);
   //get getStartTime =>
