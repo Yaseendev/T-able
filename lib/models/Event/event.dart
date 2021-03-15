@@ -34,22 +34,24 @@ class Event extends HiveObject {
   @HiveField(11)
   bool isSmartAlarm;
 
-
-  Event(
-      {this.title,
-      @required this.startTime,
-      @required this.endTime,
-      this.location,
-      this.notes,
-      this.repetitionCycle,
-      this.repDays,
-      this.ending,
-      this.alarms,
-      this.googleCalendarEventId,this.alarmTime,this.isSmartAlarm=false});
+  Event({
+    this.title,
+    @required this.startTime,
+    @required this.endTime,
+    this.location,
+    this.notes,
+    this.repetitionCycle,
+    this.repDays,
+    this.ending,
+    this.alarms,
+    this.googleCalendarEventId,
+    this.alarmTime,
+    this.isSmartAlarm = false,
+  });
 
   get getStartDate => myDateFormat(startTime);
   //get getStartTime =>
   get getEndDate => myDateFormat(startTime);
-  //get getEndTime => 
+  //get getEndTime =>
 
 }

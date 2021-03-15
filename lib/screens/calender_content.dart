@@ -1,8 +1,8 @@
-import 'package:T_able/models/Event/event.dart';
-import 'package:T_able/models/calendar/calendar.dart';
-import 'package:T_able/widgets/action_button.dart';
-import 'package:T_able/widgets/calendarsList.dart';
-import 'package:T_able/widgets/eventsList.dart';
+import 'package:t_able/models/Event/event.dart';
+import 'package:t_able/models/calendar/calendar.dart';
+import 'package:t_able/widgets/action_button.dart';
+import 'package:t_able/widgets/calendarsList.dart';
+import 'package:t_able/widgets/eventsList.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable

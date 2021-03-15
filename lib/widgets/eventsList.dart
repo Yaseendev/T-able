@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:T_able/models/calendar/calendar.dart';
-import 'package:T_able/utils/google_calender_handler.dart';
-import 'package:T_able/widgets/event_card.dart';
+import 'package:t_able/models/calendar/calendar.dart';
+import 'package:t_able/utils/google_calender_handler.dart';
+import 'package:t_able/widgets/event_card.dart';
 import 'package:flutter/material.dart';
 import '../utils/vars_consts.dart';
 

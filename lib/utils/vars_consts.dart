@@ -1,7 +1,9 @@
-import 'package:T_able/models/Event/event.dart';
-import 'package:T_able/models/calendar/calendar.dart';
+import 'package:t_able/models/Event/event.dart';
+import 'package:t_able/models/calendar/calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/calendar/v3.dart' as gc;
+import 'package:time_machine/time_machine.dart';
+import 'package:timetable/timetable.dart' as t;
 
 enum EndingOptions { never, onDate, after }
 var events;
@@ -20,3 +22,22 @@ const clientSecret = 'Wqv5TvtOWXXmaO1rBpt9r9k6';
 const scopes = [gc.CalendarApi.CalendarScope];
 const kDistanceApiKey = 'prj_test_pk_e5c000a2613315e821a5590d2180ebbba5c11007';
 const kDistanceApiUrl = 'https://api.radar.io/v1/route/distance';
+var dEventBox;
+List<t.BasicEvent> bEvents = [];
+int dEventId = 0;
+void addTodynCalendar() {
+  for (int i = 0; i < events.length; i++) {
+    print(events.getAt(i));
+    DateTime start = events.getAt(i).startTime;
+    DateTime end = events.getAt(i).endTime;
+    bEvents.add(t.BasicEvent(
+      id: dEventId++,
+      title: events.getAt(i).title,
+      color: Colors.blue,
+      start: LocalDate.dateTime(start)
+          .at(LocalTime(start.hour, start.minute, 0)),
+      end: LocalDate.dateTime(end)
+          .at(LocalTime(end.hour, end.minute, 0)),
+    ));
+  }
+}

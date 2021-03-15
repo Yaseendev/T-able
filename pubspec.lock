@@ -43,6 +43,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.5.0-nullsafety.1"
+  black_hole_flutter:
+    dependency: transitive
+    description:
+      name: black_hole_flutter
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.15"
   bloc:
     dependency: transitive
     description:
@@ -458,7 +465,7 @@ packages:
     source: hosted
     version: "0.12.10-nullsafety.1"
   meta:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: meta
       url: "https://pub.dartlang.org"
@@ -611,6 +618,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.5"
+  rxdart:
+    dependency: transitive
+    description:
+      name: rxdart
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.24.1"
   shelf:
     dependency: transitive
     description:
@@ -693,6 +707,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.4.0"
+  time_machine:
+    dependency: "direct main"
+    description:
+      name: time_machine
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.9.16"
+  timetable:
+    dependency: "direct main"
+    description:
+      name: timetable
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.8"
   timing:
     dependency: transitive
     description:

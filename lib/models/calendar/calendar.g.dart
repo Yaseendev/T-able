@@ -26,7 +26,8 @@ class CalendarAdapter extends TypeAdapter<Calendar> {
       events: (fields[6] as List)?.cast<Event>(),
       rootCalendarTitle: fields[7] as String,
       googleCalendarId: fields[8] as String,
-    )..location = fields[9] as String;
+      location: fields[9] as String,
+    );
   }
 
   @override

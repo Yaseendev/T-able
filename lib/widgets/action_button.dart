@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:T_able/models/Event/event.dart';
-import 'package:T_able/models/calendar/calendar.dart';
-import 'package:T_able/screens/image_screen.dart';
-import 'package:T_able/utils/DateformatingHelper.dart';
-import 'package:T_able/utils/bloc/calendarsList/calendarList_event.dart';
-import 'package:T_able/utils/google_calender_handler.dart';
-import 'package:T_able/utils/vars_consts.dart';
+import 'package:t_able/models/Event/event.dart';
+import 'package:t_able/models/calendar/calendar.dart';
+import 'package:t_able/screens/image_screen.dart';
+import 'package:t_able/utils/DateformatingHelper.dart';
+import 'package:t_able/utils/bloc/calendarsList/calendarList_event.dart';
+import 'package:t_able/utils/google_calender_handler.dart';
+import 'package:t_able/utils/timeMachineHive.dart';
+import 'package:t_able/utils/vars_consts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:image_pickers/image_pickers.dart';
 import 'package:location/location.dart';
+import 'package:time_machine/time_machine.dart';
+import 'package:timetable/timetable.dart' as t;
 //import 'package:provider/provider.dart';
 import 'package:unicorndial/unicorndial.dart';
 import 'DropdownMenu.dart';
@@ -89,6 +92,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
   ScrollController scrollController;
   bool _enableSA;
   String _sAText;
+  //final dEventBox = Hive.box('dEvents');
 
   @override
   void initState() {
@@ -935,6 +939,10 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                       .decode(response.body);
                                                   final int statusCode =
                                                       response.statusCode;
+                                                  var recommendedTime;
+                                                  var dist;
+                                                  var carDurTxt;
+                                                  var footDurTxt;
                                                   if (statusCode != 200 ||
                                                       responseBody == null) {
                                                     print('falied');
@@ -946,12 +954,12 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                   } else {
                                                     print(
                                                         'String: ${response.body}');
-                                                    var carDurTxt =
+                                                    carDurTxt =
                                                         responseBody['routes']
                                                                     ['car']
                                                                 ['duration']
                                                             ['text'];
-                                                    var footDurTxt =
+                                                    footDurTxt =
                                                         responseBody['routes']
                                                                     ['foot']
                                                                 ['duration']
@@ -966,55 +974,57 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                                                     ['foot']
                                                                 ['duration']
                                                             ['value'];
-                                                    var dist =
+                                                    dist =
                                                         responseBody['routes']
                                                                     ['car']
                                                                 ['distance']
                                                             ['text'];
-                                                    var bestTime = min(
-                                                        double.parse(carDurVal),
-                                                        double.parse(
-                                                            footDurVal));
+                                                    var bestTime = min<double>(
+                                                        carDurVal, footDurVal);
                                                     var readyTime = prefBox.get(
                                                         'readyTime',
                                                         defaultValue: 60);
                                                     print(bestTime);
-                                                    var recommendedTime =
+                                                    recommendedTime =
                                                         bestTime + readyTime;
+                                                  }
+                                                  pr.hide().whenComplete(() {
                                                     showDialog(
                                                         context: context,
                                                         barrierDismissible:
                                                             true,
-                                                        builder:
-                                                            (ctx) =>
-                                                                AlertDialog(
-                                                                  shape: RoundedRectangleBorder(
-                                                                      borderRadius:
-                                                                          BorderRadius.all(
-                                                                              Radius.circular(20.0))),
-                                                                  elevation:
-                                                                      24.0,
-                                                                  title: Text(
-                                                                      'Alarm Suggestion Summary'),
-                                                                  content: Text('The destination between your location and the event location is $dist\n' +
-                                                                      'Travel duration by car is $carDurTxt\n' +
-                                                                      'Travel duration by foot is $footDurTxt\n' +
-                                                                      'Your alarm will be set ${recommendedTime / 60} hours before this event start time'),
-                                                                  actions: [
-                                                                    FlatButton(
-                                                                        child: Text(
-                                                                            'Ok'),
-                                                                        onPressed:
-                                                                            () {
-                                                                          Navigator.pop(
-                                                                              ctx);
-                                                                          alarmTime =
-                                                                              stTime.replacing(minute: stTime.hour * 60 + stTime.minute + recommendedTime.round());
-                                                                        })
-                                                                  ],
-                                                                ));
-                                                  }
-                                                  pr.hide().whenComplete(() {});
+                                                        builder: (ctx) {
+                                                          print(
+                                                              'Entered recommend dialog');
+                                                          return AlertDialog(
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius
+                                                                    .all(Radius
+                                                                        .circular(
+                                                                            20.0))),
+                                                            elevation: 24.0,
+                                                            title: Text(
+                                                                'Alarm Suggestion Summary'),
+                                                            content: Text('The destination between your location and the event location is $dist\n' +
+                                                                'Travel duration by car is $carDurTxt\n' +
+                                                                'Travel duration by foot is $footDurTxt\n' +
+                                                                'Your alarm will be set ${(recommendedTime / 60).round()} hours before this event start time'),
+                                                            actions: [
+                                                              FlatButton(
+                                                                  child: Text(
+                                                                      'Ok'),
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator
+                                                                        .pop(
+                                                                            ctx);
+                                                                    //alarmTime =
+                                                                    //  stTime.replacing(minute: stTime.hour * 60 + stTime.minute + recommendedTime.round());
+                                                                  })
+                                                            ],
+                                                          );
+                                                        });
+                                                  });
                                                 }
                                               } else {
                                                 setState(() {
@@ -1045,30 +1055,30 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                         ),
                                       ],
 
-                                      //Center(
-                                      //     child: ToggleButtons(
-                                      //       children: [
-                                      //         Icon(Icons.ac_unit),
-                                      //         Icon(Icons.access_alarms_sharp),
-                                      //         Icon(Icons.account_balance_wallet),
-                                      //       ],
-                                      //       isSelected: _alarmOptSelection,
-                                      //       onPressed: (index) {
-                                      //         if (_alarmOptSelection
-                                      //                 .contains(true) &&
-                                      //             _alarmOptSelection[index] != true)
-                                      //           print('More then one selected');
-                                      //         else {
-                                      //           setState(() {
-                                      //             _alarmOptSelection[index] =
-                                      //                 !_alarmOptSelection[index];
-                                      //           });
-                                      //         }
-                                      //       },
-                                      //       borderRadius: BorderRadius.all(
-                                      //           Radius.circular(30.0)),
-                                      //       borderWidth: 5,
-                                      //     ),
+                                      //   Center(
+                                      //       child: ToggleButtons(
+                                      //         children: [
+                                      //           Icon(Icons.ac_unit),
+                                      //           Icon(Icons.access_alarms_sharp),
+                                      //           Icon(Icons.account_balance_wallet),
+                                      //         ],
+                                      //         isSelected: _alarmOptSelection,
+                                      //         onPressed: (index) {
+                                      //           if (_alarmOptSelection
+                                      //                   .contains(true) &&
+                                      //               _alarmOptSelection[index] != true)
+                                      //             print('More then one selected');
+                                      //           else {
+                                      //             setState(() {
+                                      //               _alarmOptSelection[index] =
+                                      //                   !_alarmOptSelection[index];
+                                      //             });
+                                      //           }
+                                      //         },
+                                      //         borderRadius: BorderRadius.all(
+                                      //             Radius.circular(30.0)),
+                                      //         borderWidth: 5,
+                                      //       ),
                                     )
                                   : Container(),
                               Divider(
@@ -1275,39 +1285,19 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             barrierDismissible: true,
                                             barrierLabel: '',
                                           );
-                                           String parsedMonth = stDate.month < 10
-                                              ? '0${stDate.month}'
-                                              : '${stDate.month}';
-                                          String parsedDay = stDate.day < 10
-                                              ? '0${stDate.day}'
-                                              : '${stDate.day}';
-                                          var alarmDate = DateTime.parse(
-                                              '${stDate.year}-$parsedMonth-$parsedDay ${alarmTime.hour}:${alarmTime.minute}:00');
+                                        String parsedMonth = stDate.month < 10
+                                            ? '0${stDate.month}'
+                                            : '${stDate.month}';
+                                        String parsedDay = stDate.day < 10
+                                            ? '0${stDate.day}'
+                                            : '${stDate.day}';
+                                        var alarmDate = DateTime.parse(
+                                            '${stDate.year}-$parsedMonth-$parsedDay ${alarmTime.hour}:${alarmTime.minute}:00');
                                         if (widget.calendar == null) {
                                           var gEvent;
                                           Calendar currentCal =
                                               allCalendars.getAt(_calIndex);
 
-                                          // currentCal.events.add(Event(
-                                          //   title: textController.text,
-                                          //   startTime: stDate.add(Duration(
-                                          //       hours: stTime.hour,
-                                          //       minutes: stTime.minute)),
-                                          //   endTime: endDate.add(Duration(
-                                          //       hours: endTime.hour,
-                                          //       minutes: endTime.minute)),
-                                          //   alarms: [],
-                                          //   ending: {},
-                                          //   location: '',
-                                          //   notes: '',
-                                          //   repDays: [],
-                                          //   repetitionCycle: {},
-                                          // ));
-                                          // allCalendars.put(
-                                          //     currentCal
-                                          //         .title,
-                                          //     currentCal);
-                                         
                                           Event newEvent = Event(
                                             title: textController.text,
                                             startTime: stDate,
@@ -1321,11 +1311,11 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             notes: '',
                                             repDays: [],
                                             repetitionCycle: {},
-                                            alarmTime: alarmEnabled
-                                                ? alarmDate
-                                                : null,
+                                            alarmTime:
+                                                alarmEnabled ? alarmDate : null,
                                             isSmartAlarm: _enableSA,
                                           );
+
                                           if (isGcEnabled || gcSync) {
                                             String gcId;
                                             if (currentCal.title == 'other')
@@ -1408,9 +1398,8 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                             notes: '',
                                             repDays: [],
                                             repetitionCycle: {},
-                                            alarmTime: alarmEnabled
-                                                ? alarmDate
-                                                : null,
+                                            alarmTime:
+                                                alarmEnabled ? alarmDate : null,
                                             isSmartAlarm: _enableSA,
                                           );
                                           if (isGcEnabled || gcSync) {
@@ -1461,7 +1450,26 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                           //events.close();
                                           Navigator.pop(context);
                                         }
-
+                                        events.put(
+                                            textController.text, Event(
+                                              title: textController.text,
+                                              startTime: stDate,
+                                              endTime: endDate
+                                            ));
+                                       bEvents.add(t.BasicEvent(
+                                          id: dEventId++,
+                                          title: textController.text,
+                                          color: Colors.blue,
+                                          start: LocalDate.dateTime(stDate).at(
+                                              LocalTime(stDate.hour,
+                                                  stDate.minute, 0)),
+                                          end: LocalDate.dateTime(endDate).at(
+                                              LocalTime(endDate.hour,
+                                                  endDate.minute, 0)),
+                                        ));
+                                        //dEventBox.put('main', dyEvents);
+                                       
+                                        // print( "Dynamic Events: ${dEventBox.get('main')}");
                                         Navigator.pop(context);
                                       }),
                                 ],
@@ -1515,7 +1523,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
     alarmEnabled = false;
     _calendarDropdownItems = [];
     _alarmOptSelection = List.generate(3, (_) => false);
-    _selectedCalendar = 'other';
+    _selectedCalendar = 'Other';
     for (int i = 0; i < allCalendars.length; i++) {
       //for (Calendar calendar in allCalendars) {
       _calendarDropdownItems.add(DropdownMenuItem(
@@ -1526,7 +1534,7 @@ class _CustomActionButtonState extends State<CustomActionButton> {
           print(_calIndex);
         },
       ));
-      if (allCalendars.getAt(i).title == 'other') _calIndex = i;
+      if (allCalendars.getAt(i).title == 'Other') _calIndex = i;
     }
     _sAText = 'Turn On Smart Alarm';
     _enableSA = false;

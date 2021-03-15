@@ -1,6 +1,6 @@
-import 'package:T_able/utils/vars_consts.dart';
-import 'package:T_able/widgets/action_button.dart';
-import 'package:T_able/widgets/eventsList.dart';
+import 'package:t_able/utils/vars_consts.dart';
+import 'package:t_able/widgets/action_button.dart';
+import 'package:t_able/widgets/eventsList.dart';
 import 'package:flutter/material.dart';
 
 class EventsScreen extends StatelessWidget {

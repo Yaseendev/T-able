@@ -1,5 +1,5 @@
-import 'package:T_able/models/Event/event.dart';
-import 'package:T_able/utils/DateformatingHelper.dart';
+import 'package:t_able/models/Event/event.dart';
+import 'package:t_able/utils/DateformatingHelper.dart';
 import 'package:flutter/material.dart';
 import '../utils/vars_consts.dart';
 

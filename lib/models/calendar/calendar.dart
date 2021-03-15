@@ -1,4 +1,4 @@
-import 'package:T_able/models/Event/event.dart';
+import 'package:t_able/models/Event/event.dart';
 import 'package:googleapis/androidmanagement/v1.dart';
 import 'package:hive/hive.dart';
 import 'package:googleapis/calendar/v3.dart' as gc;

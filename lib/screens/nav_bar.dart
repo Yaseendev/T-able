@@ -1,16 +1,18 @@
-import 'package:T_able/models/Event/event.dart';
-import 'package:T_able/models/calendar/calendar.dart';
-import 'package:T_able/screens/Home_Screen.dart';
-import 'package:T_able/screens/add_event_screen.dart';
-import 'package:T_able/screens/calendars_screen.dart';
-import 'package:T_able/screens/chat_screen.dart';
-import 'package:T_able/screens/settings_screen.dart';
-import 'package:T_able/utils/bloc/calendarsList/calenderList_bloc.dart';
-import 'package:T_able/utils/vars_consts.dart';
+import 'package:t_able/models/Event/event.dart';
+import 'package:t_able/models/calendar/calendar.dart';
+import 'package:t_able/screens/Home_Screen.dart';
+import 'package:t_able/screens/add_event_screen.dart';
+import 'package:t_able/screens/calendars_screen.dart';
+import 'package:t_able/screens/chat_screen.dart';
+import 'package:t_able/screens/settings_screen.dart';
+import 'package:t_able/utils/bloc/calendarsList/calenderList_bloc.dart';
+import 'package:t_able/utils/vars_consts.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
+import 'dynamic_calendar_screen.dart';
 
 
   void showToast() {
@@ -37,28 +39,18 @@ class _NavBarScreenState extends State<NavBarScreen> {
 
   @override
   void initState() {
-    _initHive();
     super.initState();
   }
 
-  void _initHive() async {
-    //_calendars.
-  }
 
   @override
   Widget build(BuildContext context) {
     con = context;
     final List<Widget> _children = [
-      HomeScreen(
-          //bloc: _bloc,
-          ),
-      //AddEventScreen(),
-      //EventsScreen(),
-
+      HomeScreen(),
       CalendarsScreen(),
+      DynamicCalendarScreen(),
       ChatScreen(),
-      //Test screen Here
-      Container(),
       SettingsScreen(),
     ];
 
@@ -71,8 +63,8 @@ class _NavBarScreenState extends State<NavBarScreen> {
         items: <Widget>[
           Icon(Icons.home, size: 30),
           Icon(Icons.alarm, size: 30),
-          Icon(Icons.chat_rounded, size: 30),
           Icon(Icons.event, size: 30),
+          Icon(Icons.chat_rounded, size: 30),
           Icon(Icons.person_rounded, size: 30),
         ],
         onTap: (index) {
@@ -80,11 +72,6 @@ class _NavBarScreenState extends State<NavBarScreen> {
           setState(() {
             _currentIndex = index;
           });
-          // final CurvedNavigationBarState navBarState =
-          //             _bottomNavigationKey.currentState;
-          //         navBarState.setPage(1);
-
-          print('Page: $index');
         },
         //color: Colors.green,
       ),

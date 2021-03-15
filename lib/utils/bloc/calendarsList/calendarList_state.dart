@@ -1,4 +1,4 @@
-import 'package:T_able/models/calendar/calendar.dart';
+import 'package:t_able/models/calendar/calendar.dart';
 
 class CalendarListState {
   List<Calendar> _allCalendars;

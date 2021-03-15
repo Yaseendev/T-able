@@ -1,6 +1,6 @@
-import 'package:T_able/screens/add_event_screen.dart';
-import 'package:T_able/utils/vars_consts.dart';
-import 'package:T_able/widgets/action_button.dart';
+import 'package:t_able/screens/add_event_screen.dart';
+import 'package:t_able/utils/vars_consts.dart';
+import 'package:t_able/widgets/action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:analog_clock/analog_clock.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -17,13 +17,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   //GlobalKey _bottomNavigationKey = GlobalKey();
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: primaryColor1,
-      floatingActionButton: CustomActionButton(sKey:_scaffoldKey),
+      floatingActionButton: CustomActionButton(sKey: _scaffoldKey),
       body: Container(
         /*decoration: BoxDecoration(
           image: DecorationImage(
@@ -58,7 +58,19 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
                   ),
                 ),
               ),
-              Expanded(flex: 1, child: Container()),
+              Expanded(
+                  flex: 1,
+                  child: Container(
+                    child: Center(
+                      child: Text(
+                        'No Events for now !\nAdd Events to see here',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 23,
+                        ),
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),

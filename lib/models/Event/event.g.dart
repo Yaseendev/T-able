@@ -26,13 +26,16 @@ class EventAdapter extends TypeAdapter<Event> {
       repDays: (fields[5] as List)?.cast<String>(),
       ending: (fields[6] as Map)?.cast<EndingOptions, int>(),
       alarms: (fields[7] as List)?.cast<Alarm>(),
+      googleCalendarEventId: fields[9] as String,
+      alarmTime: fields[10] as DateTime,
+      isSmartAlarm: fields[11] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, Event obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.startTime)
       ..writeByte(1)
@@ -50,7 +53,13 @@ class EventAdapter extends TypeAdapter<Event> {
       ..writeByte(7)
       ..write(obj.alarms)
       ..writeByte(8)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(9)
+      ..write(obj.googleCalendarEventId)
+      ..writeByte(10)
+      ..write(obj.alarmTime)
+      ..writeByte(11)
+      ..write(obj.isSmartAlarm);
   }
 
   @override
