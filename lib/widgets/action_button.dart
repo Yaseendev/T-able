@@ -294,13 +294,13 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                                         );
                                         _listImagePaths.forEach((media) {
                                           print(media.path.toString());
-                                          Navigator.push(context,
+                                          Navigator.push(widget.sKey.currentContext,
                                               MaterialPageRoute(builder:
                                                   (BuildContext context) {
                                             return ImageScreen(media.path);
                                           }));
                                         });
-                                        setState(() {});
+                                        //setState(() {});
                                       } on PlatformException {}
                                     },
                                     child: Text(
@@ -563,7 +563,31 @@ class _CustomActionButtonState extends State<CustomActionButton> {
                             onPressed: () => Navigator.pop(_),
                             child: Text('Add from image')),
                         CupertinoActionSheetAction(
-                            onPressed: () => Navigator.pop(_),
+                            onPressed: () async { Navigator.pop(_);
+                            try {
+                                        _listImagePaths =
+                                            await ImagePickers.pickerPaths(
+                                          galleryMode: GalleryMode.image,
+                                          showGif: false,
+                                          selectCount: 1,
+                                          showCamera: true,
+                                          // cropConfig :CropConfig(enableCrop: true,height: 1,width: 1),
+                                          compressSize: 500,
+                                          uiConfig: UIConfig(
+                                            uiThemeColor: primaryColor1,
+                                          ),
+                                        );
+                                        _listImagePaths.forEach((media) {
+                                          print(media.path.toString());
+                                          Navigator.push(widget.sKey.currentContext,
+                                              MaterialPageRoute(builder:
+                                                  (BuildContext context) {
+                                            return ImageScreen(media.path);
+                                          }));
+                                        });
+                                        //setState(() {});
+                                      } on PlatformException {}
+                            },
                             child: Text('Add from google calendar')),
                       ],
                       cancelButton: CupertinoActionSheetAction(

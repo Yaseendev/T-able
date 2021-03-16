@@ -17,10 +17,24 @@ PODS:
   - analog_clock (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_secure_storage (3.3.1):
+    - Flutter
+  - geolocator (6.2.0):
+    - Flutter
+  - google_maps_flutter (0.0.1):
+    - Flutter
+    - GoogleMaps (< 3.10)
+  - GoogleMaps (3.9.0):
+    - GoogleMaps/Maps (= 3.9.0)
+  - GoogleMaps/Base (3.9.0)
+  - GoogleMaps/Maps (3.9.0):
+    - GoogleMaps/Base
   - image_pickers (0.0.1):
     - AFNetworking
     - Flutter
     - ZLPhotoBrowser-objc (= 1.0.2)
+  - location (0.0.1):
+    - Flutter
   - path_provider (0.0.1):
     - Flutter
   - SDWebImage (5.10.2):
@@ -34,13 +48,18 @@ PODS:
 DEPENDENCIES:
   - analog_clock (from `.symlinks/plugins/analog_clock/ios`)
   - Flutter (from `Flutter`)
+  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
+  - geolocator (from `.symlinks/plugins/geolocator/ios`)
+  - google_maps_flutter (from `.symlinks/plugins/google_maps_flutter/ios`)
   - image_pickers (from `.symlinks/plugins/image_pickers/ios`)
+  - location (from `.symlinks/plugins/location/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
 
 SPEC REPOS:
   trunk:
     - AFNetworking
+    - GoogleMaps
     - SDWebImage
     - ZLPhotoBrowser-objc
 
@@ -49,8 +68,16 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/analog_clock/ios"
   Flutter:
     :path: Flutter
+  flutter_secure_storage:
+    :path: ".symlinks/plugins/flutter_secure_storage/ios"
+  geolocator:
+    :path: ".symlinks/plugins/geolocator/ios"
+  google_maps_flutter:
+    :path: ".symlinks/plugins/google_maps_flutter/ios"
   image_pickers:
     :path: ".symlinks/plugins/image_pickers/ios"
+  location:
+    :path: ".symlinks/plugins/location/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
   url_launcher:
@@ -60,7 +87,12 @@ SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   analog_clock: 3f864a82c3b9ffc5743911e353d11556bdb43f7a
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
+  geolocator: f5e3de65e241caba7ce3e8a618803387bda73384
+  google_maps_flutter: c7f9c73576de1fbe152a227bfd6e6c4ae8088619
+  GoogleMaps: 4b5346bddfe6911bb89155d43c903020170523ac
   image_pickers: 4a20d713c9029a75582e28482271e92d72d334fd
+  location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
   SDWebImage: b969dcfc02c40a5da71eac0b03b8f1a0c794a86f
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
